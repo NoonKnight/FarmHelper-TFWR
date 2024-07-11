@@ -7,7 +7,7 @@ namespace ModHelper.Helpers;
 /// <summary>
 /// Class helping to add syntax colors to the game
 /// </summary>
-public class ColorHelper
+public static class ColorHelper
 {
     /// <summary>
     /// Adds a syntax color to the game
@@ -29,11 +29,9 @@ public class ColorHelper
         }
         
         // Add to colors
-        var colors = typeof(CodeUtilities).GetStaticField<List<(Regex, string)>>("colors");
-        
         // Never add before comments
-        colors.Insert(
-            fromStart ? System.Math.Min(colors.Count, 1) : colors.Count,
+        CodeUtilities.colors.Insert(
+            fromStart ? System.Math.Min(CodeUtilities.colors.Count, 1) : CodeUtilities.colors.Count,
             (new Regex(pattern), color)
         );
         

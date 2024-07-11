@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using ModHelper.API;
+using ModHelper.API.Attributes;
 
 namespace ModHelper.Helpers;
 
@@ -32,7 +32,7 @@ public static class FuncHelper
         }
 
         // Unlocks the function
-        Saver.Inst.mainFarm.GetField<HashSet<string>>("unlocks").Add(name.ToLower());
+        Saver.Inst.mainFarm.unlocks.Add(name.ToLower());
         return true;
     }
     
@@ -55,7 +55,7 @@ public static class FuncHelper
     /// Success of the addition
     /// </returns>
     /// <remarks>
-    /// This method uses <see cref="ModHelper.API.PyFunctionAttribute"/> to fetch the data.
+    /// This method uses <see cref="PyFunctionAttribute"/> to fetch the data.
     /// </remarks>
     public static bool Add(Delegate callback)
     {
@@ -74,11 +74,10 @@ public static class FuncHelper
         var allTypes = info.GetParameters().Select(p => p.ParameterType).ToArray();
         var paramTypes = allTypes.Where(p => typeof(IPyObject).IsAssignableFrom(p)).ToList();
 
-        return Add(codeName, (interpreter, @params) =>
+        bool success = Add(codeName, (interpreter, @params) =>
         {
             // Check for params
-            interpreter.bf.CallMethod("CorrectParams", 
-                @params, 
+            interpreter.bf.CorrectParams(@params, 
                 paramTypes,
                 codeName
             );
@@ -88,6 +87,12 @@ public static class FuncHelper
 
             return result as double? ?? 0;
         });
+
+        // If failed, skip
+        if (!success)
+            return false;
+        
+        return attr.Color != null && ColorHelper.Add(codeName + @"(?=\(.*?)", attr.Color, true);
     }
 
     /// <summary>
